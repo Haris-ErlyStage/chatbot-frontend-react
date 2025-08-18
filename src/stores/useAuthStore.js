@@ -7,7 +7,6 @@ const useAuthStore = create(
     (set, get) => ({
       // User state
       currentUser: null,
-      currentPage: 'landing', // 'landing', 'login', 'signup', 'home', 'files'
       
       // Chat state
       chatHistory: [],
@@ -19,30 +18,32 @@ const useAuthStore = create(
       
       // Actions
       setCurrentUser: (user) => set({ currentUser: user }),
-      setCurrentPage: (page) => set({ currentPage: page }),
       setChatHistory: (history) => set({ chatHistory: history }),
       setCurrentThreadId: (threadId) => set({ currentThreadId: threadId }),
       setMessages: (messages) => set({ messages }),
       setFiles: (files) => set({ files }),
       
       login: (user) => {
-        set({ 
-          currentUser: user,
-          currentPage: 'home'
-        });
+        set({ currentUser: user });
       },
       
       logout: () => {
         set({ 
           currentUser: null,
-          currentPage: 'landing',
           chatHistory: [],
           currentThreadId: null,
           messages: [],
           files: []
         });
       },
-      
+
+      newChat: () => {
+        set({
+          currentThreadId: Date.now().toString(), // or use uuid
+          messages: [],
+        });
+      },  
+
       addMessage: (message) => {
         set((state) => ({
           messages: [...state.messages, message]

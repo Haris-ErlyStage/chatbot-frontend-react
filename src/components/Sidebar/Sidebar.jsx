@@ -71,12 +71,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           {/* New Chat */}
           <button
             onClick={() => {
-              setCurrentPage("home");
+              useAuthStore.getState().newChat(); // reset messages & create new thread
               if (window.innerWidth < 768) handleToggle();
             }}
             className={`flex items-center gap-3 rounded-lg transition 
-              ${isOpen || window.innerWidth < 768 ? "w-full px-4 py-3 justify-start" : "p-3 justify-center"} 
-              bg-blue-600 hover:bg-blue-700`}
+    ${isOpen || window.innerWidth < 768 ? "w-full px-4 py-3 justify-start" : "p-3 justify-center"} 
+    bg-blue-600 hover:bg-blue-700`}
             title="New Chat"
           >
             <svg className={`${isOpen || window.innerWidth < 768 ? "w-5 h-5" : "w-6 h-6"} text-white`} fill="none" stroke="currentColor" viewBox="0 0 24 24">

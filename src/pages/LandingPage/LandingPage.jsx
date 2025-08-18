@@ -25,7 +25,7 @@ const LandingPage = () => {
             Login to Chat
           </button>
           <button 
-            onClick={() => setCurrentPage('signup')}
+            onClick={() => navigate('/signup')}
             className="px-8 py-3 bg-white text-blue-600 font-medium rounded-lg border border-blue-600 hover:bg-blue-50 transition duration-200"
           >
             Create Account

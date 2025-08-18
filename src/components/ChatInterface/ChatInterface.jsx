@@ -1,8 +1,10 @@
 // src/components/ChatInterface/ChatInterface.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { useNavigate } from 'react-router-dom';
 
 const ChatInterface = () => {
+  const navigate = useNavigate();
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
@@ -81,7 +83,7 @@ const ChatInterface = () => {
       <div className="border-b border-gray-200 p-4 bg-white flex items-center justify-end">
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => setCurrentPage('files')}
+            onClick={() => navigate('/files')}
             className="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

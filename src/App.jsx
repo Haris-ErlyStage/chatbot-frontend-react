@@ -9,7 +9,7 @@ import LoginPage from './pages/LoginPage/LoginPage';
 import SignupPage from './pages/SignupPage/SignupPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage/ForgotPasswordPage';
 import HomePage from './pages/HomePage/HomePage';
-import FileManager from './components/FileManager/FileManager';
+import UploadedFilesPage from './pages/UploadedFilesPage/UploadedFilesPage';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -70,7 +70,7 @@ function App() {
 
           <Route path="/files" element={
             <ProtectedRoute>
-              <FileManager />
+              <UploadedFilesPage />
             </ProtectedRoute>
           } />
 

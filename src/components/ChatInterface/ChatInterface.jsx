@@ -10,7 +10,6 @@ const ChatInterface = () => {
   const messagesEndRef = useRef(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const { messages, addMessage, currentUser } = useAuthStore();
-
   const dropdownRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -47,7 +46,6 @@ const ChatInterface = () => {
     setInputValue('');
     setIsLoading(true);
 
-    // Simulate AI response
     setTimeout(() => {
       const aiMessage = {
         id: Date.now() + 1,
@@ -81,7 +79,6 @@ const ChatInterface = () => {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="p-4 bg-white flex items-center justify-between">
-        {/* Left side (ChatBot + Model Selector) */}
         <div className="flex items-center gap-3">
           <h1 className="text-lg font-semibold text-gray-800">ChatBot</h1>
           <select
@@ -95,8 +92,6 @@ const ChatInterface = () => {
             <option value="gemini">Gemini</option>
           </select>
         </div>
-
-        {/* Right side (Uploaded Files button) */}
         <div>
           <button
             onClick={() => navigate('/files')}
@@ -114,95 +109,19 @@ const ChatInterface = () => {
       {/* Main Area */}
       <div className="flex-1 flex flex-col bg-gray-50">
         {messages.length === 0 ? (
-          // Empty state → Centered input
           <div className="flex flex-col flex-1 items-center justify-center px-4">
             <p className="text-gray-500 mb-6">Start chatting with your PDF assistant...</p>
-
             <div className="w-full max-w-3xl relative">
-              <textarea
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask a question about your PDFs..."
-                                  className="w-full px-12 py-3 border border-gray-300 rounded-full resize-none focus:outline-none transition"
-                rows="1"
-                disabled={isLoading}
-              />
-
-              {/* Plus button */}
-              <button
-                onClick={() => setShowDropdown((prev) => !prev)}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              </button>
-
-              {/* Mic + Send */}
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-3">
-                <button className="text-gray-500 hover:text-gray-700">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 1a3 3 0 00-3 3v7a3 3 0 006 0V4a3 3 0 00-3-3zM19 10v1a7 7 0 11-14 0v-1M12 19v4m-4 0h8" />
-                  </svg>
-                </button>
-                <button
-                  onClick={handleSend}
-                  disabled={!inputValue.trim() || isLoading}
-                  className="text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-2 text-xs text-gray-500">
-              <span>Press Enter to send, Shift+Enter for new line • Powered by AI</span>
-            </div>
-          </div>
-        ) : (
-          // Normal chat mode
-          <>
-            {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto px-4 py-6">
-              <div className="max-w-3xl mx-auto space-y-4">
-                {messages.map((message) => (
-                  <React.Fragment key={message.id}>{renderMessage(message)}</React.Fragment>
-                ))}
-
-                {isLoading && (
-                  <div className="flex justify-start mb-4">
-                    <div className="max-w-2xl rounded-2xl px-4 py-2 bg-gray-100 text-gray-800 flex items-center gap-2">
-                      <p className="text-sm md:text-base text-gray-800 flex items-center">
-                        AI is thinking
-                        <span className="dot ml-1">.</span>
-                        <span className="dot">.</span>
-                        <span className="dot">.</span>
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <div ref={messagesEndRef} />
-              </div>
-            </div>
-
-            {/* Input pinned at bottom */}
-            <div className="p-4 bg-white flex flex-col items-center">
-              <div className="w-full max-w-3xl relative">
+              <div className="relative flex items-center">
                 <textarea
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Ask a question about your PDFs..."
-                  className="w-full px-12 py-3 border border-gray-300 rounded-full resize-none focus:outline-none transition"
+                  className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-full resize-none focus:outline-none transition"
                   rows="1"
                   disabled={isLoading}
                 />
-
-                {/* Plus button */}
                 <button
                   onClick={() => setShowDropdown((prev) => !prev)}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
@@ -211,8 +130,37 @@ const ChatInterface = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
                 </button>
-
-                {/* Mic + Send */}
+                {showDropdown && (
+                  <div
+                    ref={dropdownRef}
+                    className="absolute left-0 bottom-full mb-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10"
+                  >
+                    <button
+                      onClick={() => {
+                        console.log("Attach files & photos clicked");
+                        setShowDropdown(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 002.828 2.828l6.586-6.586a4 4 0 00-5.656-5.656l-6.586 6.586a6 6 0 008.485 8.485l6.586-6.586" />
+                      </svg>
+                      Attach files & photos
+                    </button>
+                    <button
+                      onClick={() => {
+                        console.log("Deep research clicked");
+                        setShowDropdown(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5v-2m0-4v-2m-3 3h6" />
+                      </svg>
+                      Deep research
+                    </button>
+                  </div>
+                )}
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-3">
                   <button className="text-gray-500 hover:text-gray-700">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -230,7 +178,102 @@ const ChatInterface = () => {
                   </button>
                 </div>
               </div>
-
+            </div>
+            <div className="mt-2 text-xs text-gray-500">
+              <span>Press Enter to send, Shift+Enter for new line • Powered by AI</span>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex-1 overflow-y-auto px-4 py-6">
+              <div className="max-w-3xl mx-auto space-y-4">
+                {messages.map((message) => (
+                  <React.Fragment key={message.id}>{renderMessage(message)}</React.Fragment>
+                ))}
+                {isLoading && (
+                  <div className="flex justify-start mb-4">
+                    <div className="max-w-2xl rounded-2xl px-4 py-2 bg-gray-100 text-gray-800 flex items-center gap-2">
+                      <p className="text-sm md:text-base text-gray-800 flex items-center">
+                        AI is thinking
+                        <span className="dot ml-1">.</span>
+                        <span className="dot">.</span>
+                        <span className="dot">.</span>
+                      </p>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+            </div>
+            <div className="p-4 bg-white flex flex-col items-center">
+              <div className="w-full max-w-3xl relative">
+                <div className="relative flex items-center">
+                  <textarea
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Ask a question about your PDFs..."
+                    className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-full resize-none focus:outline-none transition"
+                    rows="1"
+                    disabled={isLoading}
+                  />
+                  <button
+                    onClick={() => setShowDropdown((prev) => !prev)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                  {showDropdown && (
+                    <div
+                      ref={dropdownRef}
+                      className="absolute left-0 bottom-full mb-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10"
+                    >
+                      <button
+                        onClick={() => {
+                          console.log("Attach files & photos clicked");
+                          setShowDropdown(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 002.828 2.828l6.586-6.586a4 4 0 00-5.656-5.656l-6.586 6.586a6 6 0 008.485 8.485l6.586-6.586" />
+                        </svg>
+                        Attach files & photos
+                      </button>
+                      <button
+                        onClick={() => {
+                          console.log("Deep research clicked");
+                          setShowDropdown(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5v-2m0-4v-2m-3 3h6" />
+                        </svg>
+                        Deep research
+                      </button>
+                    </div>
+                  )}
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex itemsZ gap-3">
+                    <button className="text-gray-500 hover:text-gray-700">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 1a3 3 0 00-3 3v7a3 3 0 006 0V4a3 3 0 00-3-3zM19 10v1a7 7 0 11-14 0v-1M12 19v4m-4 0h8" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={handleSend}
+                      disabled={!inputValue.trim() || isLoading}
+                      className="text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
               <div className="mt-1 text-xs text-gray-500">
                 <span>Press Enter to send, Shift+Enter for new line • Powered by AI</span>
               </div>

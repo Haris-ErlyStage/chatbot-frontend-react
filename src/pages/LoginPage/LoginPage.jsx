@@ -19,14 +19,15 @@ const LoginPage = () => {
 
     try {
       const response = await api.login(email, password);
-      if (response.user) {
-        login(response.user);
-        navigate('/home'); // Redirect to home after successful login
+      if (response.access_token && response.user) {
+        // Pass both user data and token to login function
+        login(response.user, response.access_token);
+        navigate('/home');
       } else {
-        setError(response.message || 'Login failed');
+        setError('Invalid response from server');
       }
     } catch (err) {
-      setError('Invalid email or password');
+      setError(err.message || 'Invalid email or password');
     } finally {
       setLoading(false);
     }

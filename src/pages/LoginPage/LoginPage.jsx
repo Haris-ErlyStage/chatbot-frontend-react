@@ -1,7 +1,7 @@
 // src/components/LoginPage/LoginPage.jsx
 import React, { useState } from 'react';
 import { useAuthStore } from '../../stores/useAuthStore';
-import { api } from '../../services/mockApi';
+import { api } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {

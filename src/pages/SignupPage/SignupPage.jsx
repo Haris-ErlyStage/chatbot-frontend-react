@@ -82,7 +82,7 @@ const SignupPage = () => {
       // Call the API with the correct parameters: full_name, email, username, password
       const response = await api.signup(fullName, email, generatedUsername, password);
       if (response.user) {
-        login(response.user);
+        login(response.user, response.access_token);
         navigate('/home'); // Redirect to home after successful signup
       } else {
         setError(response.message || 'Signup failed');

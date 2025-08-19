@@ -38,6 +38,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     newChat,
     setCurrentThread,
     fetchThreads,
+    authToken
   } = useAuthStore();
 
   const handleToggle = useCallback(() => {
@@ -63,10 +64,20 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   // Fetch threads on mount and when user changes
   useEffect(() => {
-    if (currentUser?.id) {
-      fetchThreads();
+    // Check if we have both user and auth token
+    if (currentUser?.id && authToken) {
+      const fetchThreadsSafe = async () => {
+        try {
+          await fetchThreads();
+        } catch (error) {
+          console.error('Error fetching threads:', error);
+          toast.error('Failed to load chat history');
+        }
+      };
+      
+      fetchThreadsSafe();
     }
-  }, [currentUser, fetchThreads]);
+  }, [currentUser?.id, authToken, fetchThreads]);
 
   return (
     <>

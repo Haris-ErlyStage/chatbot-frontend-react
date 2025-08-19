@@ -19,6 +19,7 @@ const ChatInterface = () => {
     currentUser,
     messages,
     currentThreadId,
+    setCurrentThread,
     isSendingMessage,
     isLoadingMessages,
     loadThreadMessages,
@@ -63,9 +64,17 @@ const ChatInterface = () => {
     if (!files?.length) return;
 
     try {
-      await uploadFiles(files, currentThreadId, (progress) => {
+      // Only pass threadId if it's a real thread, not a temporary one
+      const threadId = currentThreadId && !currentThreadId.startsWith('temp_') ? currentThreadId : null;
+      const result = await uploadFiles(files, threadId, (progress) => {
         console.log(`Upload progress: ${Math.round(progress)}%`);
       });
+      
+      // If this was a new thread, update the current thread ID
+      if (result?.thread_id) {
+        setCurrentThread(result.thread_id);
+      }
+      
       toast.success(`Uploaded ${files.length} file(s)!`);
     } catch (error) {
       console.error('Upload failed:', error);
@@ -82,7 +91,7 @@ const ChatInterface = () => {
       if (!currentUser) toast.error('Not logged in');
       return;
     }
-
+  
     sendMessage(trimmed);
     setInputValue('');
   };

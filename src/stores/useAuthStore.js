@@ -227,71 +227,59 @@ const useAuthStore = create(
       },
 
       sendMessage: async (messageContent) => {
-        if (!get().authToken || !get().currentUser) {
-          console.warn("No auth token or user");
-          return;
-        }
-
+        if (!get().authToken || !messageContent.trim()) return;
+        
         const currentThreadId = get().currentThreadId;
-        const isNewThread = currentThreadId?.startsWith('temp_');
+        const isNewThread = currentThreadId && currentThreadId.startsWith('temp_');
         const actualThreadIdToSend = isNewThread ? null : currentThreadId;
-
-        const userMessage = {
-          id: `user_msg_${Date.now()}`,
-          sender: 'user',
-          content: messageContent,
-          timestamp: new Date().toISOString(),
+      
+        // Get PDF IDs to send with the message
+        let selectedPdfIds = [];
+        
+        if (isNewThread) {
+          // For new threads, use global selections if any
+          selectedPdfIds = get().globalSelectedPdfIds || [];
+        } else if (currentThreadId) {
+          // For existing threads, use thread-specific selections if any
+          selectedPdfIds = get().threadPdfSelections?.[currentThreadId] || [];
+          console.log("Current thread PDF selections:", selectedPdfIds, "for thread:", currentThreadId);
+        }
+      
+        // Prepare the payload exactly as the backend expects
+        const payload = {
+          message: messageContent,
+          thread_id: actualThreadIdToSend,
+          selected_pdf_ids: Array.isArray(selectedPdfIds) ? selectedPdfIds : [] // Ensure it's always an array
         };
-
+      
+        console.log("Sending message with payload:", JSON.stringify(payload, null, 2));
         set({ isSendingMessage: true });
-
+      
         try {
-          const data = await api.sendMessage(messageContent, actualThreadIdToSend);
+          // Call API with correct payload structure
+          const data = await api.sendMessage(payload);
           console.log("Received message response:", data);
-
+      
           const aiMessage = {
             id: data.id || `ai_msg_${Date.now()}`,
             sender: 'assistant',
             content: data.ai_response || data.response || 'No response received.',
             timestamp: data.timestamp || new Date().toISOString(),
           };
-
+      
+          // If a new thread was created, update state with the real ID
           if (isNewThread && data.thread_id) {
             console.log("New thread created with ID:", data.thread_id);
             set({ currentThreadId: data.thread_id });
           }
-
-          const finalThreadId = data.thread_id || currentThreadId;
-
-          if (isNewThread && finalThreadId && !finalThreadId.startsWith('temp_')) {
-            const title = generateThreadTitle(messageContent);
-
-            try {
-              await api.updateThreadTitle(finalThreadId, title);
-              set((state) => ({
-                threads: state.threads.map(thread =>
-                  thread.thread_id === finalThreadId
-                    ? { ...thread, title }
-                    : thread
-                )
-              }));
-            } catch (err) {
-              console.warn("Failed to update thread title:", err);
-              set((state) => ({
-                threads: state.threads.map(thread =>
-                  thread.thread_id === finalThreadId
-                    ? { ...thread, title }
-                    : thread
-                )
-              }));
-            }
-          }
-
+      
+          // Update messages
           set((state) => ({
-            messages: [...state.messages, userMessage, aiMessage],
+            messages: [...state.messages, aiMessage],
             isSendingMessage: false,
           }));
-
+      
+          // Refresh threads list (in case new one was added)
           if (isNewThread || data.thread_id) {
             console.log("Refreshing thread list after sending message.");
             get().fetchThreads();
@@ -324,20 +312,33 @@ const useAuthStore = create(
         try {
           const data = await api.uploadPDFs(files, threadIdToAddTo);
           console.log("Files uploaded:", data);
-          await get().fetchFiles();
           
-          // Clear selections after upload
+          // If we got a new thread ID back, update the current thread
+          if (data.thread_id && threadIdToAddTo === null) {
+            threadIdToAddTo = data.thread_id;
+            set({ currentThreadId: data.thread_id });
+          }
+          
+          // Store the uploaded PDF IDs in thread selections if we have a thread ID
           if (threadIdToAddTo) {
-            // If uploading to specific thread, clear global selections
-            set({ globalSelectedPdfIds: [] });
-          } else if (data.thread_id) {
-            // If new thread was created, clear global selections
-            set({ globalSelectedPdfIds: [] });
+            const uploadedPdfIds = data.results?.map(file => file.pdf_id).filter(Boolean) || [];
+            if (uploadedPdfIds.length > 0) {
+              console.log("Storing PDFs for thread:", threadIdToAddTo, "PDF IDs:", uploadedPdfIds);
+              set(state => {
+                const currentSelections = state.threadPdfSelections?.[threadIdToAddTo] || [];
+                const newSelections = [...new Set([...currentSelections, ...uploadedPdfIds])]; // Remove duplicates
+                return {
+                  threadPdfSelections: {
+                    ...state.threadPdfSelections,
+                    [threadIdToAddTo]: newSelections
+                  }
+                };
+              });
+            }
           }
           
-          if (threadIdToAddTo || data.thread_id) {
-            get().fetchThreads();
-          }
+          await get().fetchFiles();
+          get().fetchThreads();
           return data;
         } catch (error) {
           console.error('Error uploading files:', error);

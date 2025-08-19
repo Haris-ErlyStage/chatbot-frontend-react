@@ -138,13 +138,8 @@ export const api = {
    * @returns {Promise<Object>} - Chat response data including AI answer and thread info
    * @throws {Object} - Error response data from the server
    */
-  sendMessage: async (message, thread_id = null) => {
+  sendMessage: async (payload) => {
     try {
-      const payload = { message };
-      if (thread_id) {
-        payload.thread_id = thread_id;
-      }
-
       const response = await apiClient.post('/chat', payload);
       return response.data;
     } catch (error) {

@@ -28,7 +28,7 @@ export const apiClient = axios.create({
  */
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
       console.log('Adding auth token to request:', token.substring(0, 10) + '...');
@@ -76,7 +76,7 @@ apiClient.interceptors.response.use(
         window.location.href = '/login';
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -115,11 +115,11 @@ export const api = {
    */
   signup: async (full_name, email, username, password) => {
     try {
-      const response = await apiClient.post('/signup', { 
-        full_name, 
-        email, 
-        username, 
-        password 
+      const response = await apiClient.post('/signup', {
+        full_name,
+        email,
+        username,
+        password
       });
       return response.data;
     } catch (error) {
@@ -144,11 +144,40 @@ export const api = {
       if (thread_id) {
         payload.thread_id = thread_id;
       }
-      
+
       const response = await apiClient.post('/chat', payload);
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to send message' };
+    }
+  },
+  /**
+   * Upload one or more PDF files
+   * @param {FileList|File[]} files
+   * @param {string|null} thread_id - Optional: attach to existing thread
+   * @param {Function} onUploadProgress - Optional: track upload %
+   */
+  uploadPDFs: async (files, thread_id = null, onUploadProgress = null) => {
+    const formData = new FormData();
+    Array.from(files).forEach(file => {
+      formData.append('files', file);
+    });
+    if (thread_id) {
+      formData.append('thread_id', thread_id);
+    }
+
+    try {
+      const response = await apiClient.post('/upload_pdfs/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 120000,
+        onUploadProgress: (progressEvent) => {
+          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          if (onUploadProgress) onUploadProgress(percent);
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Upload failed' };
     }
   },
 
@@ -213,24 +242,24 @@ export const api = {
   uploadPDFs: async (files, thread_id = null) => {
     try {
       const formData = new FormData();
-      
+
       // Append all selected files to the form data
       for (let i = 0; i < files.length; i++) {
         formData.append('files', files[i]);
       }
-      
+
       // If adding to an existing thread, include the thread ID
       if (thread_id) {
         formData.append('thread_id', thread_id);
       }
-      
+
       const response = await apiClient.post('/upload_pdfs/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
         timeout: 120000 // Longer timeout for potentially large file uploads
       });
-      
+
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to upload PDFs' };
@@ -287,3 +316,5 @@ export const api = {
     }
   }
 };
+
+export default apiClient;
